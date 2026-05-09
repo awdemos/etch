@@ -43,6 +43,48 @@ cargo run --release -- submit-payload --payload $(python3 -c "print('00'*256)")
 cargo run --release -- mine --data-dir ~/.etch --secret <your-secret-hex>
 ```
 
+## Using as a Library
+
+Etch is a dual crate (`lib` + `bin`). Add it to your `Cargo.toml`:
+
+```toml
+[dependencies]
+etch = { git = "https://github.com/awdemos/etch" }
+```
+
+### Example: Open a chain and mine a block
+
+```rust
+use etch::{Blockchain, ChainConfig, Payload, crypto::generate_keypair};
+use std::path::Path;
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let keys = generate_keypair();
+    let mut chain = Blockchain::open(Path::new("./data"), ChainConfig::mainnet())?;
+
+    let payload = Payload([42u8; 256]);
+    let mut block = chain.build_block(keys.public, 0, vec![payload])?;
+
+    // Find a nonce that satisfies the current difficulty
+    let difficulty = chain.current_difficulty();
+    for nonce in 0..u64::MAX {
+        block.nonce = nonce;
+        if difficulty.satisfies(&block.pow_hash()) {
+            break;
+        }
+    }
+
+    chain.process_block(block)?;
+    println!("Tip height: {}", chain.tip().1);
+    Ok(())
+}
+```
+
+See the [`examples/`](examples/) directory for more:
+- [`basic_chain.rs`](examples/basic_chain.rs) — open, mine, and query blocks
+- [`custom_payload.rs`](examples/custom_payload.rs) — encode strings as 256-byte payloads
+- [`verify_block.rs`](examples/verify_block.rs) — validate blocks with consensus rules
+
 ## Architecture
 
 | Module | Responsibility |
