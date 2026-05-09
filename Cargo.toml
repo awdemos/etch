@@ -5,7 +5,7 @@ edition = "2021"
 authors = ["Systems Programmer"]
 description = "Minimal timestamping blockchain. Nothing else."
 license = "MIT"
-repository = "https://github.com/example/etch"
+repository = "https://github.com/awdemos/etch"
 rust-version = "1.75"
 
 [[bin]]
