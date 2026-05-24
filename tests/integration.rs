@@ -41,7 +41,7 @@ fn three_nodes_mine_100_blocks() {
     let mut node2 = Blockchain::open(tmp2.path(), easy_config()).unwrap();
     let mut node3 = Blockchain::open(tmp3.path(), easy_config()).unwrap();
 
-    let miner = [1u8; 32];
+    let _miner = [1u8; 32];
 
     for height in 1..=100 {
         let timestamp = easy_config().genesis_timestamp + height;
@@ -65,8 +65,8 @@ fn three_nodes_mine_100_blocks() {
     }
 
     let (tip1, height1) = node1.tip();
-    let (tip2, height2) = node2.tip();
-    let (tip3, height3) = node3.tip();
+    let (tip2, _height2) = node2.tip();
+    let (tip3, _height3) = node3.tip();
     
     assert_eq!(height1, 100);
     assert_eq!(tip1, tip2);

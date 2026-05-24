@@ -218,7 +218,7 @@ mod tests {
     fn test_process_valid_block() {
         let tmp = TempDir::new().unwrap();
         let mut chain = Blockchain::open(tmp.path(), easy_config()).unwrap();
-        let (tip, _) = chain.tip();
+        let (_tip, _) = chain.tip();
         let mut block = chain.build_block([1u8; 32], 0, vec![]).unwrap();
         let difficulty = chain.current_difficulty();
         for nonce in 0..1_000_000 {

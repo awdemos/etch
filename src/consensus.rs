@@ -187,7 +187,7 @@ impl Consensus {
 mod tests {
     use super::*;
     use crate::storage::BlockStorage;
-    use crate::types::{Block, BlockHeader, ChainConfig, Payload};
+    use crate::types::{Block, BlockHeader};
     use tempfile::TempDir;
 
     fn make_block(prev_hash: Hash, timestamp: u64, nonce: u64) -> Block {
