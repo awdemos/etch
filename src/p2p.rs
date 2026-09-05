@@ -1,8 +1,8 @@
 use crate::types::Block;
 use futures::StreamExt;
 use libp2p::{
-    core, gossipsub, identify, identity, noise, ping, swarm::NetworkBehaviour,
-    swarm::SwarmEvent, tcp, yamux, Multiaddr, PeerId, Swarm, Transport,
+    core, gossipsub, identify, identity, noise, ping, swarm::NetworkBehaviour, swarm::SwarmEvent,
+    tcp, yamux, Multiaddr, PeerId, Swarm, Transport,
 };
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashSet;
@@ -142,18 +142,18 @@ impl P2PNode {
         event_tx: &mut mpsc::Sender<P2PEvent>,
     ) {
         match event {
-            SwarmEvent::Behaviour(EtchBehaviourEvent::Gossipsub(
-                gossipsub::Event::Message { propagation_source, message, .. },
-            )) => {
-                match postcard::from_bytes::<Block>(&message.data) {
-                    Ok(block) => {
-                        let _ = event_tx.send(P2PEvent::BlockReceived(block)).await;
-                    }
-                    Err(e) => {
-                        tracing::debug!("invalid block from {}: {}", propagation_source, e);
-                    }
+            SwarmEvent::Behaviour(EtchBehaviourEvent::Gossipsub(gossipsub::Event::Message {
+                propagation_source,
+                message,
+                ..
+            })) => match postcard::from_bytes::<Block>(&message.data) {
+                Ok(block) => {
+                    let _ = event_tx.send(P2PEvent::BlockReceived(block)).await;
                 }
-            }
+                Err(e) => {
+                    tracing::debug!("invalid block from {}: {}", propagation_source, e);
+                }
+            },
             SwarmEvent::Behaviour(EtchBehaviourEvent::Identify(identify::Event::Received {
                 peer_id,
                 info,

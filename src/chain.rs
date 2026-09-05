@@ -1,6 +1,8 @@
-use crate::types::{Block, BlockHeader, ChainConfig, Difficulty, Hash, Address, Payload, MAX_PAYLOADS_PER_BLOCK};
-use crate::storage::BlockStorage;
 use crate::consensus::Consensus;
+use crate::storage::BlockStorage;
+use crate::types::{
+    Address, Block, BlockHeader, ChainConfig, Difficulty, Hash, Payload, MAX_PAYLOADS_PER_BLOCK,
+};
 use std::collections::HashMap;
 
 pub struct Blockchain {
@@ -59,9 +61,15 @@ impl Blockchain {
             return Ok(false);
         }
         let height = parent_height.map(|h| h + 1).unwrap_or(0);
-        let difficulty = Consensus::compute_difficulty(&self.storage, height, &parent_hash, &self.config.genesis_difficulty);
+        let difficulty = Consensus::compute_difficulty(
+            &self.storage,
+            height,
+            &parent_hash,
+            &self.config.genesis_difficulty,
+        );
         Consensus::validate_block(&block, &self.storage, &difficulty)?;
-        self.storage.store_block(&block, height)
+        self.storage
+            .store_block(&block, height)
             .map_err(|e| format!("storage error: {}", e))?;
         self.try_adopt_orphans();
         self.try_reorg()?;
@@ -92,9 +100,7 @@ impl Blockchain {
         timestamp: u64,
     ) -> Result<Block, String> {
         let (tip_hash, _tip_height) = self.tip();
-        let payloads: Vec<Payload> = payloads.into_iter()
-            .take(MAX_PAYLOADS_PER_BLOCK)
-            .collect();
+        let payloads: Vec<Payload> = payloads.into_iter().take(MAX_PAYLOADS_PER_BLOCK).collect();
         let merkle_root = Block::compute_merkle_root(&payloads);
         let header = BlockHeader {
             previous_hash: tip_hash,
@@ -114,7 +120,7 @@ impl Blockchain {
     pub fn current_difficulty(&self) -> Difficulty {
         let (_, height) = self.tip();
         if height == 0 {
-            self.config.genesis_difficulty.clone()
+            self.config.genesis_difficulty
         } else {
             Consensus::difficulty_at_height(&self.storage, height, &self.config.genesis_difficulty)
         }
@@ -160,21 +166,27 @@ impl Blockchain {
     fn try_reorg(&mut self) -> Result<(), String> {
         let (tip_hash, _) = self.tip();
         let all_hashes = self.storage.all_hashes();
-        let best = match Consensus::select_best_chain(&self.storage, &all_hashes, &self.config.genesis_difficulty) {
+        let best = match Consensus::select_best_chain(
+            &self.storage,
+            &all_hashes,
+            &self.config.genesis_difficulty,
+        ) {
             Some(h) => h,
             None => return Ok(()),
         };
         if best == tip_hash {
             return Ok(());
         }
-        let common = Consensus::find_common_ancestor(&self.storage, &tip_hash, &best)
-            .unwrap_or([0u8; 32]);
+        let common =
+            Consensus::find_common_ancestor(&self.storage, &tip_hash, &best).unwrap_or([0u8; 32]);
         let old_branch = Consensus::get_ancestors(&self.storage, &tip_hash);
         let new_branch = Consensus::get_ancestors(&self.storage, &best);
-        let mut old_to_apply: Vec<Hash> = old_branch.into_iter()
+        let mut old_to_apply: Vec<Hash> = old_branch
+            .into_iter()
             .take_while(|h| *h != common)
             .collect();
-        let mut new_to_apply: Vec<Hash> = new_branch.into_iter()
+        let mut new_to_apply: Vec<Hash> = new_branch
+            .into_iter()
             .take_while(|h| *h != common)
             .collect();
         old_to_apply.reverse();
@@ -192,7 +204,7 @@ impl Blockchain {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{Payload, ChainConfig};
+    use crate::types::{ChainConfig, Payload};
     use tempfile::TempDir;
 
     #[test]
@@ -240,6 +252,6 @@ mod tests {
         let genesis = chain.get_block(&tip).unwrap();
         let result = chain.process_block(genesis.clone());
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), false);
+        assert!(!result.unwrap());
     }
 }

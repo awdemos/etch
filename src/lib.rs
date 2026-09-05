@@ -39,10 +39,9 @@
 
 // Core types — re-exported at crate root for ergonomic use
 pub use types::{
-    Block, BlockHeader, ChainConfig, Difficulty, Hash, Address, Payload,
-    MAX_PAYLOADS_PER_BLOCK, TARGET_BLOCK_TIME_SECS, BLOCKS_PER_YEAR,
-    DIFFICULTY_ADJUSTMENT_PERIOD, DIFFICULTY_VOTE_WINDOW, BLOCK_REWARD,
-    REWARD_DECIMALS, MAX_SUPPLY, SCRYPT_N, SCRYPT_R, SCRYPT_P, SCRYPT_LEN,
+    Address, Block, BlockHeader, ChainConfig, Difficulty, Hash, Payload, BLOCKS_PER_YEAR,
+    BLOCK_REWARD, DIFFICULTY_ADJUSTMENT_PERIOD, DIFFICULTY_VOTE_WINDOW, MAX_PAYLOADS_PER_BLOCK,
+    MAX_SUPPLY, REWARD_DECIMALS, SCRYPT_LEN, SCRYPT_N, SCRYPT_P, SCRYPT_R, TARGET_BLOCK_TIME_SECS,
 };
 
 // Chain management

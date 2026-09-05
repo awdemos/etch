@@ -96,8 +96,8 @@ impl BlockStorage {
         if bytes.len() >= 40 {
             self.tip_hash.copy_from_slice(&bytes[0..32]);
             self.tip_height = u64::from_le_bytes([
-                bytes[32], bytes[33], bytes[34], bytes[35],
-                bytes[36], bytes[37], bytes[38], bytes[39],
+                bytes[32], bytes[33], bytes[34], bytes[35], bytes[36], bytes[37], bytes[38],
+                bytes[39],
             ]);
         }
         Ok(())
@@ -129,19 +129,14 @@ impl BlockStorage {
         let _file = File::open(self.chain_path())?;
         let mut offset = 0u64;
         let mut height = 0u64;
-        loop {
-            match self.read_block_at(offset, height) {
-                Ok(block) => {
-                    let hash = block.hash();
-                    self.index.insert(hash, (height, offset));
-                    self.tip_hash = hash;
-                    self.tip_height = height;
-                    let block_size = self.serialized_size(&block)?;
-                    offset += 4 + block_size as u64;
-                    height += 1;
-                }
-                Err(_) => break,
-            }
+        while let Ok(block) = self.read_block_at(offset, height) {
+            let hash = block.hash();
+            self.index.insert(hash, (height, offset));
+            self.tip_hash = hash;
+            self.tip_height = height;
+            let block_size = self.serialized_size(&block)?;
+            offset += 4 + block_size as u64;
+            height += 1;
         }
         self.save_meta()?;
         self.save_index()?;
@@ -206,7 +201,7 @@ impl BlockStorage {
                 let len = u32::from_le_bytes(len_bytes) as usize;
                 let mut block_bytes = vec![0u8; len];
                 reader.read_exact(&mut block_bytes)?;
-                let offset_in_new = new_file.seek(SeekFrom::Current(0))?;
+                let offset_in_new = new_file.stream_position()?;
                 if height < prune_before {
                     let block: Block = postcard::from_bytes(&block_bytes)
                         .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
@@ -215,8 +210,7 @@ impl BlockStorage {
                         nonce: block.nonce,
                         payloads: vec![],
                     };
-                    let pruned_bytes = postcard::to_stdvec(&header_only)
-                        .expect("serialize");
+                    let pruned_bytes = postcard::to_stdvec(&header_only).expect("serialize");
                     let pruned_len = pruned_bytes.len() as u32;
                     new_file.write_all(&pruned_len.to_le_bytes())?;
                     new_file.write_all(&pruned_bytes)?;
@@ -224,7 +218,12 @@ impl BlockStorage {
                     new_file.write_all(&len_bytes)?;
                     new_file.write_all(&block_bytes)?;
                 }
-                if let Some(hash) = self.index.iter().find(|(_, (h, _))| *h == height).map(|(k, _)| *k) {
+                if let Some(hash) = self
+                    .index
+                    .iter()
+                    .find(|(_, (h, _))| *h == height)
+                    .map(|(k, _)| *k)
+                {
                     self.index.insert(hash, (height, offset_in_new));
                 }
             }

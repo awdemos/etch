@@ -78,7 +78,7 @@ impl Block {
         let bytes = postcard::to_stdvec(&self.header).expect("serialize");
         let mut hasher = Sha256::new();
         hasher.update(&bytes);
-        hasher.update(&self.nonce.to_le_bytes());
+        hasher.update(self.nonce.to_le_bytes());
         hasher.finalize().into()
     }
 
@@ -109,7 +109,7 @@ impl Block {
             .iter()
             .map(|p| {
                 let mut hasher = Sha256::new();
-                hasher.update(&p.0);
+                hasher.update(p.0);
                 hasher.finalize().into()
             })
             .collect();
@@ -117,11 +117,11 @@ impl Block {
             let mut next_level = Vec::new();
             for chunk in hashes.chunks(2) {
                 let mut hasher = Sha256::new();
-                hasher.update(&chunk[0]);
+                hasher.update(chunk[0]);
                 if chunk.len() == 2 {
-                    hasher.update(&chunk[1]);
+                    hasher.update(chunk[1]);
                 } else {
-                    hasher.update(&chunk[0]);
+                    hasher.update(chunk[0]);
                 }
                 next_level.push(hasher.finalize().into());
             }
@@ -204,7 +204,7 @@ mod tests {
         let payload = Payload([1u8; 256]);
         let root = Block::compute_merkle_root(&[payload]);
         let mut hasher = sha2::Sha256::new();
-        hasher.update(&payload.0);
+        hasher.update(payload.0);
         let expected: Hash = hasher.finalize().into();
         assert_eq!(root, expected);
     }
