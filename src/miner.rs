@@ -1,5 +1,5 @@
-use crate::types::{Block, Address, Payload, MAX_PAYLOADS_PER_BLOCK};
 use crate::chain::Blockchain;
+use crate::types::{Address, Block, Payload, MAX_PAYLOADS_PER_BLOCK};
 use std::sync::Arc;
 use tokio::sync::{mpsc, Mutex};
 
@@ -60,13 +60,18 @@ impl Miner {
                         }
                     }
                     None
-                }).await;
+                })
+                .await;
                 match found {
                     Ok(Some(block)) => {
                         let mut guard = blockchain.lock().await;
                         match guard.process_block(block.clone()) {
                             Ok(true) => {
-                                tracing::info!("mined block {} with nonce {}", hex::encode(block.hash()), block.nonce);
+                                tracing::info!(
+                                    "mined block {} with nonce {}",
+                                    hex::encode(block.hash()),
+                                    block.nonce
+                                );
                                 let _ = block_tx.send(block).await;
                             }
                             Ok(false) => {

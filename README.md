@@ -119,10 +119,10 @@ Block {
         timestamp: u64,             // Unix seconds
         miner_address: [u8; 32],    // Ed25519 public key
         difficulty_vote: i8,        // -1, 0, or +1
+        payload_count: u32,         // number of payloads in this block
     },
-    payload_list: Vec<[u8; 256]>,   // Up to 1024 payloads
+    payloads: Vec<[u8; 256]>,        // Up to 1024 payloads
     nonce: u64,                     // Scrypt PoW nonce
-    signature: [u8; 64],            // Ed25519 signature
 }
 ```
 

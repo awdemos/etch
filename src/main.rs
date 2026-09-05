@@ -1,12 +1,12 @@
+use clap::Parser;
 use etch::{
     chain::Blockchain,
     cli::{Cli, Commands},
     crypto,
     miner::Miner,
-    p2p::{P2PNode, P2PEvent},
+    p2p::{P2PEvent, P2PNode},
     types::{ChainConfig, Payload},
 };
-use clap::Parser;
 use std::io::Write;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -53,8 +53,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             let mut secret_array = [0u8; 32];
             secret_array.copy_from_slice(&secret_bytes);
-            let keypair = crypto::load_keypair(&secret_array)
-                .expect("invalid secret key");
+            let keypair = crypto::load_keypair(&secret_array).expect("invalid secret key");
             run_node(data_dir, listen, peer, Some(keypair.public)).await?;
         }
         Commands::Node {
@@ -93,12 +92,7 @@ async fn run_node(
         p2p_node.run(event_tx).await;
     });
     if let Some(address) = miner_address {
-        let miner = Miner::new(
-            blockchain.clone(),
-            address,
-            payload_rx,
-            block_tx.clone(),
-        );
+        let miner = Miner::new(blockchain.clone(), address, payload_rx, block_tx.clone());
         tokio::spawn(miner.run());
     }
     let payload_file = data_dir.join("payloads.txt");
